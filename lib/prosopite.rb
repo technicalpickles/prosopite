@@ -13,6 +13,11 @@ module Prosopite
   end
 
   class << self
+    attr_writer :configuration
+    def configuration
+      @configuration ||= Configuration.new
+    end
+
     attr_writer :raise,
                 :stderr_logger,
                 :rails_logger,

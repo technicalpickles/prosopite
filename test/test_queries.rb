@@ -2,6 +2,7 @@ require 'test_helper'
 
 class TestQueries < Minitest::Test
   def setup
+    Prosopite.configuration = Prosopite::Configuration.new
     Prosopite.raise = true
   end
 

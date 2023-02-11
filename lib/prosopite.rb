@@ -5,6 +5,7 @@ module Prosopite
   class NPlusOneQueriesError < StandardError; end
 
   class Configuration
+    attr_accessor :raise
   end
 
   class << self

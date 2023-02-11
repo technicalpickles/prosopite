@@ -6,10 +6,6 @@ class TestQueries < Minitest::Test
     Prosopite.raise = true
   end
 
-  def teardown
-    Prosopite.ignore_queries = nil
-  end
-
   def test_first_in_has_many_loop
     # 20 chairs, 4 legs each
     chairs = create_list(:chair, 20)

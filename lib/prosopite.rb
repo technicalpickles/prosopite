@@ -3,6 +3,10 @@ module Prosopite
   DEFAULT_ALLOW_LIST = %w(active_record/associations/preloader active_record/validations/uniqueness)
 
   class NPlusOneQueriesError < StandardError; end
+
+  class Configuration
+  end
+
   class << self
     attr_writer :raise,
                 :stderr_logger,

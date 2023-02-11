@@ -11,7 +11,8 @@ module Prosopite
       :backtrace_cleaner,
       :allow_stack_paths,
       :custom_logger,
-      :rails_logger
+      :rails_logger,
+      :stderr_logger
 
     def initialize
       @raise = false
@@ -21,6 +22,7 @@ module Prosopite
       @allow_stack_paths = []
       @custom_logger = false
       @rails_logger = false
+      @stderr_logger = false
     end
 
     def raise?
@@ -36,8 +38,7 @@ module Prosopite
       @configuration ||= Configuration.new
     end
 
-    attr_accessor :stderr_logger,
-                  :prosopite_logger,
+    attr_accessor :prosopite_logger,
                   :ignore_queries
 
     def_delegators :configuration,
@@ -47,7 +48,8 @@ module Prosopite
       :min_n_queries, :min_n_queries=,
       :allow_stack_paths, :allow_stack_paths=,
       :custom_logger, :custom_logger=,
-      :rails_logger, :rails_logger=
+      :rails_logger, :rails_logger=,
+      :stderr_logger, :stderr_logger=
 
     def allow_list=(value)
       puts "Prosopite.allow_list= is deprecated. Use Prosopite.allow_stack_paths= instead."
@@ -216,7 +218,6 @@ module Prosopite
     end
 
     def send_notifications
-      @stderr_logger ||= false
       @prosopite_logger ||= false
 
       notifications_str = ''
@@ -238,7 +239,7 @@ module Prosopite
       custom_logger.warn(notifications_str) if custom_logger
 
       Rails.logger.warn(red(notifications_str)) if rails_logger
-      $stderr.puts(red(notifications_str)) if @stderr_logger
+      $stderr.puts(red(notifications_str)) if stderr_logger
 
       if @prosopite_logger
         File.open(File.join(Rails.root, 'log', 'prosopite.log'), 'a') do |f|

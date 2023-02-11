@@ -8,14 +8,15 @@ module Prosopite
     attr_writer :raise
     attr_accessor :ignore_pauses,
       :min_n_queries,
-      :backtrace_cleaner
-
+      :backtrace_cleaner,
+      :allow_stack_paths
 
     def initialize
       @raise = false
       @ignore_pauses = false
       @min_n_queries = 2
       @backtrace_cleaner = Rails.backtrace_cleaner
+      @allow_stack_paths = []
     end
 
     def raise?
@@ -42,7 +43,8 @@ module Prosopite
       :raise?, :raise=,
       :ignore_pauses, :ignore_pauses=,
       :backtrace_cleaner, :backtrace_cleaner=,
-      :min_n_queries, :min_n_queries=
+      :min_n_queries, :min_n_queries=,
+      :allow_stack_paths, :allow_stack_paths=
 
     def allow_list=(value)
       puts "Prosopite.allow_list= is deprecated. Use Prosopite.allow_stack_paths= instead."
@@ -60,7 +62,6 @@ module Prosopite
       tc[:prosopite_query_holder] = Hash.new { |h, k| h[k] = [] }
       tc[:prosopite_query_caller] = {}
 
-      @allow_stack_paths ||= []
       self.min_n_queries ||= 2
 
       tc[:prosopite_scan] = true
@@ -138,7 +139,7 @@ module Prosopite
           next unless queries.any?
 
           kaller = tc[:prosopite_query_caller][location_key]
-          allow_list = (@allow_stack_paths + DEFAULT_ALLOW_LIST)
+          allow_list = (allow_stack_paths + DEFAULT_ALLOW_LIST)
           is_allowed = kaller.any? { |f| allow_list.any? { |s| f.match?(s) } }
 
           unless is_allowed

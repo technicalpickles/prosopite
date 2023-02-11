@@ -7,7 +7,6 @@ class TestQueries < Minitest::Test
   end
 
   def teardown
-    Prosopite.allow_stack_paths = nil
     Prosopite.ignore_queries = nil
   end
 

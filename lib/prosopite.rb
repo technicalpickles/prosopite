@@ -5,21 +5,26 @@ module Prosopite
   class NPlusOneQueriesError < StandardError; end
 
   class Configuration
-    attr_accessor :raise
+    attr_writer :raise
 
     def initialize
       @raise = false
     end
+
+    def raise?
+      @raise
+    end
   end
 
   class << self
+    extend Forwardable
+
     attr_writer :configuration
     def configuration
       @configuration ||= Configuration.new
     end
 
-    attr_writer :raise,
-                :stderr_logger,
+    attr_writer :stderr_logger,
                 :rails_logger,
                 :prosopite_logger,
                 :custom_logger,
@@ -29,10 +34,7 @@ module Prosopite
                 :min_n_queries,
                 :backtrace_cleaner
 
-    # use a interator reader, because otherwise `raise` for errors uses it
-    def raise?
-      @raise
-    end
+    def_delegators :configuration, :raise?, :raise=
 
     def allow_list=(value)
       puts "Prosopite.allow_list= is deprecated. Use Prosopite.allow_stack_paths= instead."

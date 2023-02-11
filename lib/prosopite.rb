@@ -10,7 +10,8 @@ module Prosopite
       :min_n_queries,
       :backtrace_cleaner,
       :allow_stack_paths,
-      :custom_logger
+      :custom_logger,
+      :rails_logger
 
     def initialize
       @raise = false
@@ -19,6 +20,7 @@ module Prosopite
       @backtrace_cleaner = Rails.backtrace_cleaner
       @allow_stack_paths = []
       @custom_logger = false
+      @rails_logger = false
     end
 
     def raise?
@@ -35,7 +37,6 @@ module Prosopite
     end
 
     attr_accessor :stderr_logger,
-                  :rails_logger,
                   :prosopite_logger,
                   :ignore_queries
 
@@ -45,7 +46,8 @@ module Prosopite
       :backtrace_cleaner, :backtrace_cleaner=,
       :min_n_queries, :min_n_queries=,
       :allow_stack_paths, :allow_stack_paths=,
-      :custom_logger, :custom_logger=
+      :custom_logger, :custom_logger=,
+      :rails_logger, :rails_logger=
 
     def allow_list=(value)
       puts "Prosopite.allow_list= is deprecated. Use Prosopite.allow_stack_paths= instead."
@@ -214,7 +216,6 @@ module Prosopite
     end
 
     def send_notifications
-      @rails_logger ||= false
       @stderr_logger ||= false
       @prosopite_logger ||= false
 
@@ -236,7 +237,7 @@ module Prosopite
 
       custom_logger.warn(notifications_str) if custom_logger
 
-      Rails.logger.warn(red(notifications_str)) if @rails_logger
+      Rails.logger.warn(red(notifications_str)) if rails_logger
       $stderr.puts(red(notifications_str)) if @stderr_logger
 
       if @prosopite_logger

@@ -24,6 +24,11 @@ module Prosopite
                 :min_n_queries,
                 :backtrace_cleaner
 
+    # use a interator reader, because otherwise `raise` for errors uses it
+    def raise?
+      @raise
+    end
+
     def allow_list=(value)
       puts "Prosopite.allow_list= is deprecated. Use Prosopite.allow_stack_paths= instead."
 

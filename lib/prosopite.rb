@@ -32,12 +32,12 @@ module Prosopite
                   :custom_logger,
                   :allow_stack_paths,
                   :ignore_queries,
-                  :ignore_pauses,
                   :min_n_queries,
                   :backtrace_cleaner
 
     def_delegators :configuration,
-      :raise?, :raise=
+      :raise?, :raise=,
+      :ignore_pauses, :ignore_pauses=
 
     def allow_list=(value)
       puts "Prosopite.allow_list= is deprecated. Use Prosopite.allow_stack_paths= instead."

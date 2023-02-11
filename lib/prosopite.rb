@@ -206,7 +206,6 @@ module Prosopite
       @rails_logger ||= false
       @stderr_logger ||= false
       @prosopite_logger ||= false
-      @raise ||= false
 
       notifications_str = ''
 
@@ -235,7 +234,7 @@ module Prosopite
         end
       end
 
-      raise NPlusOneQueriesError.new(notifications_str) if @raise
+      raise NPlusOneQueriesError.new(notifications_str) if raise?
     end
 
     def red(str)

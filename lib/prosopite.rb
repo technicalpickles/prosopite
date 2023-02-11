@@ -6,11 +6,12 @@ module Prosopite
 
   class Configuration
     attr_writer :raise
-    attr_accessor :ignore_pauses
+    attr_accessor :ignore_pauses, :backtrace_cleaner
 
     def initialize
       @raise = false
       @ignore_pauses = false
+      @backtrace_cleaner = Rails.backtrace_cleaner
     end
 
     def raise?
@@ -32,21 +33,17 @@ module Prosopite
                   :custom_logger,
                   :allow_stack_paths,
                   :ignore_queries,
-                  :min_n_queries,
-                  :backtrace_cleaner
+                  :min_n_queries
 
     def_delegators :configuration,
       :raise?, :raise=,
-      :ignore_pauses, :ignore_pauses=
+      :ignore_pauses, :ignore_pauses=,
+      :backtrace_cleaner, :backtrace_cleaner=
 
     def allow_list=(value)
       puts "Prosopite.allow_list= is deprecated. Use Prosopite.allow_stack_paths= instead."
 
       self.allow_stack_paths = value
-    end
-
-    def backtrace_cleaner
-      @backtrace_cleaner ||= Rails.backtrace_cleaner
     end
 
     def scan

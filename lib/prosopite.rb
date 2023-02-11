@@ -47,13 +47,26 @@ module Prosopite
       @query = query
     end
 
-    def normalize
+    def take
       raise UnimplementedError
+    end
+
+    def self.take(db, query)
+      fingerprint = case db
+      when :mysql
+        MySQL.new(query)
+      when :pg
+        Pg.new(query)
+      else
+        raise ArgumentError, "Don't know how handle db #{db}, only know mysql and pg"
+      end
+
+      fingerprint.take
     end
 
     class MySQL < self
       # Many thanks to https://github.com/genkami/fluent-plugin-query-fingerprint/
-      def normalize
+      def take
         fingerprint = query.dup
 
         return "mysqldump" if fingerprint =~ %r#\ASELECT /\*!40001 SQL_NO_CACHE \*/ \* FROM `#
@@ -101,7 +114,7 @@ module Prosopite
     end
 
     class Pg < self
-      def normalize
+      def take
         begin
           require 'pg_query'
         rescue LoadError => e
@@ -113,8 +126,6 @@ module Prosopite
     end
 
   end
-
-
 
   class << self
     extend Forwardable
@@ -239,14 +250,10 @@ module Prosopite
 
     def fingerprint(query)
       if ActiveRecord::Base.connection.adapter_name.downcase.include?('mysql')
-        mysql_fingerprint(query)
+        Fingerprint::MySQL.new(query).take
       else
-        Fingerprint::Pg.new(query).normalize
+        Fingerprint::Pg.new(query).take
       end
-    end
-
-    def mysql_fingerprint(query)
-      Fingerprint::MySQL.new(query).normalize
     end
 
     def send_notifications

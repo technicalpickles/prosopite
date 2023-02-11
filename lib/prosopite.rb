@@ -42,17 +42,19 @@ module Prosopite
       @configuration ||= Configuration.new
     end
 
-    def_delegators :configuration,
-      :raise?, :raise=,
-      :ignore_pauses, :ignore_pauses=,
-      :backtrace_cleaner, :backtrace_cleaner=,
-      :min_n_queries, :min_n_queries=,
-      :allow_stack_paths, :allow_stack_paths=,
-      :custom_logger, :custom_logger=,
-      :rails_logger, :rails_logger=,
-      :stderr_logger, :stderr_logger=,
-      :prosopite_logger, :prosopite_logger=,
-      :ignore_queries, :ignore_queries=
+    def method_missing(method_name, *args, &block)
+      if configuration.respond_to?(method_name)
+        # TODO define methods as they are recognized
+        configuration.__send__(method_name, *args, &block)
+      else
+        super
+      end
+    end
+
+    # prefer this to respond_to? because it doesn't respond to `method` but it does
+    def respond_to_missing?(method_name, include_private = false)
+      configuration.respond_to?(method_name, include_private) || super
+    end
 
     def allow_list=(value)
       puts "Prosopite.allow_list= is deprecated. Use Prosopite.allow_stack_paths= instead."

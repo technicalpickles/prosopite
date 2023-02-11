@@ -249,11 +249,12 @@ module Prosopite
     end
 
     def fingerprint(query)
-      if ActiveRecord::Base.connection.adapter_name.downcase.include?('mysql')
-        Fingerprint::MySQL.new(query).take
-      else
-        Fingerprint::Pg.new(query).take
-      end
+      db = if ActiveRecord::Base.connection.adapter_name.downcase.include?('mysql')
+             :mysql
+           else
+             :pg
+           end
+      Fingerprint.take(db, query)
     end
 
     def send_notifications

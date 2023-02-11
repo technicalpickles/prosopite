@@ -32,6 +32,12 @@ module Prosopite
     def raise?
       @raise
     end
+
+    def allow_list=(value)
+      puts "Prosopite.allow_list= is deprecated. Use Prosopite.allow_stack_paths= instead."
+
+      self.allow_stack_paths = value
+    end
   end
 
   class << self
@@ -54,12 +60,6 @@ module Prosopite
     # prefer this to respond_to? because it doesn't respond to `method` but it does
     def respond_to_missing?(method_name, include_private = false)
       configuration.respond_to?(method_name, include_private) || super
-    end
-
-    def allow_list=(value)
-      puts "Prosopite.allow_list= is deprecated. Use Prosopite.allow_stack_paths= instead."
-
-      self.allow_stack_paths = value
     end
 
     def scan

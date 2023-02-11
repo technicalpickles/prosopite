@@ -40,6 +40,82 @@ module Prosopite
     end
   end
 
+  class Fingerprint
+    attr_reader :query
+
+    def initialize(query)
+      @query = query
+    end
+
+    def normalize
+      raise UnimplementedError
+    end
+
+    class MySQL < self
+      # Many thanks to https://github.com/genkami/fluent-plugin-query-fingerprint/
+      def normalize
+        fingerprint = query.dup
+
+        return "mysqldump" if fingerprint =~ %r#\ASELECT /\*!40001 SQL_NO_CACHE \*/ \* FROM `#
+        return "percona-toolkit" if fingerprint =~ %r#\*\w+\.\w+:[0-9]/[0-9]\*/#
+        if match = /\A\s*(call\s+\S+)\(/i.match(fingerprint)
+          return match.captures.first.downcase!
+        end
+
+        if match = /\A((?:INSERT|REPLACE)(?: IGNORE)?\s+INTO.+?VALUES\s*\(.*?\))\s*,\s*\(/im.match(fingerprint)
+          fingerprint = match.captures.first
+        end
+
+        fingerprint.gsub!(%r#/\*[^!].*?\*/#m, "")
+        fingerprint.gsub!(/(?:--|#)[^\r\n]*(?=[\r\n]|\Z)/, "")
+
+        return fingerprint if fingerprint.gsub!(/\Ause \S+\Z/i, "use ?")
+
+        fingerprint.gsub!(/\\["']/, "")
+        fingerprint.gsub!(/".*?"/m, "?")
+        fingerprint.gsub!(/'.*?'/m, "?")
+
+        fingerprint.gsub!(/\btrue\b|\bfalse\b/i, "?")
+
+        fingerprint.gsub!(/[0-9+-][0-9a-f.x+-]*/, "?")
+        fingerprint.gsub!(/[xb.+-]\?/, "?")
+
+        fingerprint.strip!
+        fingerprint.gsub!(/[ \n\t\r\f]+/, " ")
+        fingerprint.downcase!
+
+        fingerprint.gsub!(/\bnull\b/i, "?")
+
+        fingerprint.gsub!(/\b(in|values?)(?:[\s,]*\([\s?,]*\))+/, "\\1(?+)")
+
+        fingerprint.gsub!(/\b(select\s.*?)(?:(\sunion(?:\sall)?)\s\1)+/, "\\1 /*repeat\\2*/")
+
+        fingerprint.gsub!(/\blimit \?(?:, ?\?| offset \?)/, "limit ?")
+
+        if fingerprint =~ /\border by/
+          fingerprint.gsub!(/\G(.+?)\s+asc/, "\\1")
+        end
+
+        fingerprint
+      end
+    end
+
+    class Pg < self
+      def normalize
+        begin
+          require 'pg_query'
+        rescue LoadError => e
+          msg = "Could not load the 'pg_query' gem. Add `gem 'pg_query'` to your Gemfile"
+          raise LoadError, msg, e.backtrace
+        end
+        PgQuery.fingerprint(query)
+      end
+    end
+
+  end
+
+
+
   class << self
     extend Forwardable
 
@@ -165,61 +241,12 @@ module Prosopite
       if ActiveRecord::Base.connection.adapter_name.downcase.include?('mysql')
         mysql_fingerprint(query)
       else
-        begin
-          require 'pg_query'
-        rescue LoadError => e
-          msg = "Could not load the 'pg_query' gem. Add `gem 'pg_query'` to your Gemfile"
-          raise LoadError, msg, e.backtrace
-        end
-        PgQuery.fingerprint(query)
+        Fingerprint::Pg.new(query).normalize
       end
     end
 
-    # Many thanks to https://github.com/genkami/fluent-plugin-query-fingerprint/
     def mysql_fingerprint(query)
-      query = query.dup
-
-      return "mysqldump" if query =~ %r#\ASELECT /\*!40001 SQL_NO_CACHE \*/ \* FROM `#
-      return "percona-toolkit" if query =~ %r#\*\w+\.\w+:[0-9]/[0-9]\*/#
-      if match = /\A\s*(call\s+\S+)\(/i.match(query)
-        return match.captures.first.downcase!
-      end
-
-      if match = /\A((?:INSERT|REPLACE)(?: IGNORE)?\s+INTO.+?VALUES\s*\(.*?\))\s*,\s*\(/im.match(query)
-        query = match.captures.first
-      end
-
-      query.gsub!(%r#/\*[^!].*?\*/#m, "")
-      query.gsub!(/(?:--|#)[^\r\n]*(?=[\r\n]|\Z)/, "")
-
-      return query if query.gsub!(/\Ause \S+\Z/i, "use ?")
-
-      query.gsub!(/\\["']/, "")
-      query.gsub!(/".*?"/m, "?")
-      query.gsub!(/'.*?'/m, "?")
-
-      query.gsub!(/\btrue\b|\bfalse\b/i, "?")
-
-      query.gsub!(/[0-9+-][0-9a-f.x+-]*/, "?")
-      query.gsub!(/[xb.+-]\?/, "?")
-
-      query.strip!
-      query.gsub!(/[ \n\t\r\f]+/, " ")
-      query.downcase!
-
-      query.gsub!(/\bnull\b/i, "?")
-
-      query.gsub!(/\b(in|values?)(?:[\s,]*\([\s?,]*\))+/, "\\1(?+)")
-
-      query.gsub!(/\b(select\s.*?)(?:(\sunion(?:\sall)?)\s\1)+/, "\\1 /*repeat\\2*/")
-
-      query.gsub!(/\blimit \?(?:, ?\?| offset \?)/, "limit ?")
-
-      if query =~ /\border by/
-        query.gsub!(/\G(.+?)\s+asc/, "\\1")
-      end
-
-      query
+      Fingerprint::MySQL.new(query).normalize
     end
 
     def send_notifications

@@ -6,6 +6,10 @@ module Prosopite
 
   class Configuration
     attr_accessor :raise
+
+    def initialize
+      @raise = false
+    end
   end
 
   class << self

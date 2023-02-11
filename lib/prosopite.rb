@@ -6,9 +6,11 @@ module Prosopite
 
   class Configuration
     attr_writer :raise
+    attr_accessor :ignore_pauses
 
     def initialize
       @raise = false
+      @ignore_pauses = false
     end
 
     def raise?
@@ -58,7 +60,6 @@ module Prosopite
       tc[:prosopite_query_caller] = {}
 
       @allow_stack_paths ||= []
-      @ignore_pauses ||= false
       @min_n_queries ||= 2
 
       tc[:prosopite_scan] = true

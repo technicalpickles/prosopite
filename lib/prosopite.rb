@@ -80,7 +80,7 @@ module Prosopite
     end
 
     def pause
-      if @ignore_pauses
+      if ignore_pauses
         return block_given? ? yield : nil
       end
 

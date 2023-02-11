@@ -6,11 +6,15 @@ module Prosopite
 
   class Configuration
     attr_writer :raise
-    attr_accessor :ignore_pauses, :backtrace_cleaner
+    attr_accessor :ignore_pauses,
+      :min_n_queries,
+      :backtrace_cleaner
+
 
     def initialize
       @raise = false
       @ignore_pauses = false
+      @min_n_queries = 2
       @backtrace_cleaner = Rails.backtrace_cleaner
     end
 
@@ -32,13 +36,13 @@ module Prosopite
                   :prosopite_logger,
                   :custom_logger,
                   :allow_stack_paths,
-                  :ignore_queries,
-                  :min_n_queries
+                  :ignore_queries
 
     def_delegators :configuration,
       :raise?, :raise=,
       :ignore_pauses, :ignore_pauses=,
-      :backtrace_cleaner, :backtrace_cleaner=
+      :backtrace_cleaner, :backtrace_cleaner=,
+      :min_n_queries, :min_n_queries=
 
     def allow_list=(value)
       puts "Prosopite.allow_list= is deprecated. Use Prosopite.allow_stack_paths= instead."
@@ -57,7 +61,7 @@ module Prosopite
       tc[:prosopite_query_caller] = {}
 
       @allow_stack_paths ||= []
-      @min_n_queries ||= 2
+      self.min_n_queries ||= 2
 
       tc[:prosopite_scan] = true
 
@@ -120,7 +124,7 @@ module Prosopite
       tc[:prosopite_notifications] = {}
 
       tc[:prosopite_query_counter].each do |location_key, count|
-        if count >= @min_n_queries
+        if count >= min_n_queries
           fingerprints = tc[:prosopite_query_holder][location_key].group_by do |q|
             begin
               fingerprint(q)
@@ -129,7 +133,7 @@ module Prosopite
             end
           end
 
-          queries = fingerprints.values.select { |q| q.size >= @min_n_queries }
+          queries = fingerprints.values.select { |q| q.size >= min_n_queries }
 
           next unless queries.any?
 

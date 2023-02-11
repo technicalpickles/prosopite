@@ -13,7 +13,8 @@ module Prosopite
       :custom_logger,
       :rails_logger,
       :stderr_logger,
-      :prosopite_logger
+      :prosopite_logger,
+      :ignore_queries
 
     def initialize
       @raise = false
@@ -25,6 +26,7 @@ module Prosopite
       @rails_logger = false
       @stderr_logger = false
       @prosopite_logger = false
+      @ignore_queries = []
     end
 
     def raise?
@@ -40,8 +42,6 @@ module Prosopite
       @configuration ||= Configuration.new
     end
 
-    attr_accessor :ignore_queries
-
     def_delegators :configuration,
       :raise?, :raise=,
       :ignore_pauses, :ignore_pauses=,
@@ -51,7 +51,8 @@ module Prosopite
       :custom_logger, :custom_logger=,
       :rails_logger, :rails_logger=,
       :stderr_logger, :stderr_logger=,
-      :prosopite_logger, :prosopite_logger=
+      :prosopite_logger, :prosopite_logger=,
+      :ignore_queries, :ignore_queries=
 
     def allow_list=(value)
       puts "Prosopite.allow_list= is deprecated. Use Prosopite.allow_stack_paths= instead."
@@ -255,8 +256,7 @@ module Prosopite
     end
 
     def ignore_query?(sql)
-      @ignore_queries ||= []
-      @ignore_queries.any? { |q| q === sql }
+      ignore_queries.any? { |q| q === sql }
     end
 
     def subscribe

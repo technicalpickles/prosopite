@@ -263,7 +263,7 @@ module Prosopite
 
       tc[:prosopite_scan] = false
 
-      create_notifications
+      process_queries
       send_notifications if tc[:prosopite_notifications].present?
 
       tc[:prosopite_query_counter] = nil
@@ -271,34 +271,34 @@ module Prosopite
       tc[:prosopite_query_caller] = nil
     end
 
-    def create_notifications
-      tc[:prosopite_notifications] = {}
+    def process_queries
+      notifications = {}
 
       tc[:prosopite_query_counter].each do |location_key, count|
-        if count >= min_n_queries
-          fingerprints = tc[:prosopite_query_holder][location_key].group_by do |q|
-            begin
-              fingerprint(q)
-            rescue
-              raise q
-            end
-          end
+        next unless count >= min_n_queries
 
-          queries = fingerprints.values.select { |q| q.size >= min_n_queries }
-
-          next unless queries.any?
-
-          kaller = tc[:prosopite_query_caller][location_key]
-          allow_list = (allow_stack_paths + DEFAULT_ALLOW_LIST)
-          is_allowed = kaller.any? { |f| allow_list.any? { |s| f.match?(s) } }
-
-          unless is_allowed
-            queries.each do |q|
-              tc[:prosopite_notifications][q] = kaller
-            end
+        fingerprints = tc[:prosopite_query_holder][location_key].group_by do |q|
+          begin
+            fingerprint(q)
+          rescue
+            raise q
           end
         end
+
+        queries = fingerprints.values.select { |q| q.size >= min_n_queries }
+        next if queries.none?
+
+        kaller = tc[:prosopite_query_caller][location_key]
+        allow_list = (allow_stack_paths + DEFAULT_ALLOW_LIST)
+        is_allowed = kaller.any? { |f| allow_list.any? { |s| f.match?(s) } }
+        next if is_allowed
+
+        queries.each do |q|
+          notifications[q] = kaller
+        end
       end
+
+      tc[:prosopite_notifications] = notifications
     end
 
     def fingerprint(query)

@@ -3,7 +3,7 @@ require 'test_helper'
 class TestQueries < Minitest::Test
   def setup
     Prosopite.configuration = Prosopite::Configuration.new
-    Prosopite.raise = true
+    Prosopite.configuration.raise = true
   end
 
   def test_first_in_has_many_loop

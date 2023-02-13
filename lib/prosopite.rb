@@ -36,7 +36,7 @@ module Prosopite
       tc[:prosopite_query_holder] = Hash.new { |h, k| h[k] = [] }
       tc[:prosopite_query_caller] = {}
 
-      self.min_n_queries ||= 2
+      configuration.min_n_queries ||= 2
 
       tc[:prosopite_scan] = true
 

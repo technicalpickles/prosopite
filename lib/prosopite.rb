@@ -88,7 +88,7 @@ module Prosopite
       tc[:prosopite_scan] = false
 
       process_queries
-      send_notifications if tc[:prosopite_notifications].present?
+      Notifier.new(configuration: configuration).send_notifications if tc[:prosopite_notifications].present?
 
       tc[:prosopite_query_counter] = nil
       tc[:prosopite_query_holder] = nil
@@ -119,10 +119,6 @@ module Prosopite
       end
 
       tc[:prosopite_notifications] = notifications
-    end
-
-    def send_notifications
-      Notifier.new(configuration: configuration).send_notifications
     end
 
     def ignore_query?(sql)

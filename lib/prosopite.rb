@@ -8,8 +8,6 @@ module Prosopite
   class NPlusOneQueriesError < StandardError; end
 
   class << self
-    extend Forwardable
-
     attr_writer :configuration
     def configuration
       @configuration ||= Configuration.new
@@ -58,7 +56,7 @@ module Prosopite
     end
 
     def pause
-      if ignore_pauses
+      if configuration.ignore_pauses
         return block_given? ? yield : nil
       end
 
@@ -101,17 +99,17 @@ module Prosopite
       notifications = {}
 
       tc[:prosopite_query_counter].each do |location_key, count|
-        next unless count >= min_n_queries
+        next unless count >= configuration.min_n_queries
 
         fingerprints = tc[:prosopite_query_holder][location_key].group_by do |q|
           Fingerprint.take(q)
         end
 
-        queries = fingerprints.values.select { |q| q.size >= min_n_queries }
+        queries = fingerprints.values.select { |q| q.size >= configuration.min_n_queries }
         next if queries.none?
 
         kaller = tc[:prosopite_query_caller][location_key]
-        allow_list = (allow_stack_paths + DEFAULT_ALLOW_LIST)
+        allow_list = (configuration.allow_stack_paths + DEFAULT_ALLOW_LIST)
         is_allowed = kaller.any? { |f| allow_list.any? { |s| f.match?(s) } }
         next if is_allowed
 
@@ -128,7 +126,7 @@ module Prosopite
     end
 
     def ignore_query?(sql)
-      ignore_queries.any? { |q| q === sql }
+      configuration.ignore_queries.any? { |q| q === sql }
     end
 
     def subscribe

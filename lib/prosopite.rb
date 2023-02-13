@@ -87,8 +87,8 @@ module Prosopite
 
       tc[:prosopite_scan] = false
 
-      process_queries
-      Notifier.new(configuration: configuration).send_notifications if tc[:prosopite_notifications].present?
+      notifications = process_queries
+      Notifier.send_notifications(notifications)
 
       tc[:prosopite_query_counter] = nil
       tc[:prosopite_query_holder] = nil

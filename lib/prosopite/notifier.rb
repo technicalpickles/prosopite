@@ -43,6 +43,10 @@ module Prosopite
       raise NPlusOneQueriesError.new(notifications_str) if configuration.raise?
     end
 
+    def self.send_notifications(notifications)
+      new(configuration: Prosopite.configuration).send_notifications if notifications.any?
+    end
+
     def tc
       Thread.current
     end
